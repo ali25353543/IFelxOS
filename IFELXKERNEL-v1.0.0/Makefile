@@ -1,10 +1,10 @@
 PROJECT = IFelxOS
 CC = gcc
-LD = i386-elf-ld
+LD = ld
 AS = nasm
 CFLAGS = -m32 -ffreestanding -O2 -Wall -Wextra
 LDFLAGS = -m elf_i386 -T linker.ld
-OBJS = kernel_entry.o kernel.o vga.o keyboard.o commands.o mini_string.o heap.o
+OBJS = kernel_entry.o kernel.o vga.o keyboard.o commands.o mini_string.o heap.o graphics.o font.o multiboot2.o
 
 all: kernel.bin
 
@@ -22,7 +22,7 @@ iso: kernel.bin grub.cfg
 	cp kernel.bin iso/boot/
 	cp grub.cfg iso/boot/grub/
 	grub-mkrescue -o $(PROJECT).iso iso
-
+	qemu-system-x86_64 -cdrom IFelxOS.iso
 clean:
 	rm -rf *.o kernel.bin iso $(PROJECT).iso
 

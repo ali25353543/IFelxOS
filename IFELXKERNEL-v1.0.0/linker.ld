@@ -1,11 +1,29 @@
 ENTRY(start)
-SECTIONS {
+
+SECTIONS
+{
     . = 1M;
-    .text : {
-        *(.multiboot)
+
+    /* 🔥 Multiboot MUST be first in file */
+    .multiboot ALIGN(8) : {
+        KEEP(*(.multiboot))
+    }
+
+    /* code */
+    .text ALIGN(16) : {
         *(.text*)
     }
-    .rodata : { *(.rodata*) }
-    .data : { *(.data*) }
-    .bss : { *(.bss*) *(COMMON) }
+
+    /* read-only data */
+    .rodata ALIGN(16) : {
+        *(.rodata*)
+    }
+
+    .data ALIGN(16) : {
+        *(.data*)
+    }
+
+    .bss ALIGN(16) : {
+        *(.bss*)
+    }
 }

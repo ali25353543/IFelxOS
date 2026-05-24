@@ -6,5 +6,7 @@
 
 void keyboard_readline(char* buf, size_t maxlen);
 bool keyboard_check_esc(void);
+extern int cursor_x;
+extern int cursor_y;
 
 #endif

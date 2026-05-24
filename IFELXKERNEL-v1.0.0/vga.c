@@ -5,7 +5,7 @@
 #include "mini_string.h"
 
 static uint16_t* const VGA_MEMORY = (uint16_t*)0xB8000;
-static uint8_t vga_color = 0x1F;
+static uint8_t vga_color = 0x0F;
 static size_t vga_row = 0, vga_col = 0;
 
 static inline uint8_t vga_entry_color(uint8_t fg, uint8_t bg) {
@@ -15,7 +15,7 @@ static inline uint8_t vga_entry_color(uint8_t fg, uint8_t bg) {
 void vga_init() {
     vga_row = 0;
     vga_col = 0;
-    vga_setcolor(VGA_COLOR_WHITE, VGA_COLOR_BLUE);
+    vga_setcolor(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     vga_clear();
 }
 
@@ -94,7 +94,7 @@ static inline void outb(uint16_t port, uint8_t val) {
 
 void vga_set_graphics_mode() {
     // Set VGA mode 13h (320x200, 256 colors)
-    __asm__ volatile ("int $0x10" : : "a"(0x0013));
+    __asm__ volatile ("int $0x13" : : "a"(0x0013));
 }
 
 void vga_set_pixel(int x, int y, uint8_t color) {

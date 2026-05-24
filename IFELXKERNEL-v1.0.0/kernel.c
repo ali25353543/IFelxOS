@@ -1,33 +1,48 @@
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include "vga.h"
 #include "keyboard.h"
+#include "multiboot2.h"
+#include "graphics.h"
+#include "font.h"
 #include "commands.h"
+#include <string.h>
 
-void kernel_main(void) {
-    // Initialize hardware and display
-    vga_init();
-    vga_setcolor(VGA_COLOR_WHITE, VGA_COLOR_BLUE);
-    vga_clear();
+#define PROMPT "> "
+#define PROMPT_COLOR 0x00FFFF00
+#define CHAR_W 8
+#define LINE_SPACING 2
 
-    vga_printf("IFELXOS\n");
-    vga_printf("Type 'help' for commands\n\n");
-    
-    // Main command loop
-    char input[256];
+void kernel_main(uint32_t magic, void* mbi)
+{
+    parse_multiboot2(magic, mbi);
+
+    if (!fb) {
+        while (1) __asm__("hlt");
+    }
+
+    graphics_init(fb, fb_width, fb_height, fb_pitch);
+    clear_screen(0x000000);
+
+    /* Initialize cursor position */
+    cursor_x = 0;
+    cursor_y = 0;
+
     while (1) {
-        // Display prompt
-        vga_printf("IFELX~$ ");
-        
-        // Read user input
-        keyboard_readline(input, sizeof(input) - 1);
-        input[sizeof(input) - 1] = '\0'; // Ensure null termination
-        
-        // Handle command
-        vga_setcolor(VGA_COLOR_WHITE, VGA_COLOR_BLUE);
-        if (!commands_handle(input)) {
-            vga_printf(" Erorr xv2b2+7000  Unknown command. Type 'help'\n");
+        /* Draw prompt */
+        draw_string(cursor_x, cursor_y, PROMPT, PROMPT_COLOR);
+
+        /* set input start after prompt */
+        size_t prompt_len = strlen(PROMPT);
+        cursor_x += (int)(prompt_len * CHAR_W);
+
+        /* read a line into buffer */
+        char buf[1024];
+        keyboard_readline(buf, sizeof(buf));
+
+        /* handle the command; commands_handle is expected to draw output
+           at current `cursor_x`/`cursor_y` positions or update them */
+        if (!commands_handle(buf)) {
+            draw_string(cursor_x, cursor_y, "Unknown command: ", 0x00FFFFFF);
+            draw_string(cursor_x, cursor_y, buf, 0x00FFFFFF);
+            draw_string(cursor_x, cursor_y, "\n", 0x00FFFFFF);
         }
     }
 }
