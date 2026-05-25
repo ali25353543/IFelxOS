@@ -19,7 +19,7 @@ IFelxOS is a lightweight, modular kernel built for educational and symbolic comp
 ## 🛠️ Build Instructions
 
 ### Requirements:
-- `gcc`, `nasm`, `i386-elf-ld`, `grub-mkrescue`
+- `gcc`, `nasm`, `i386-elf-ld`, `grub-mkrescue` , `qemu-system`
 
 ### Build Commands:
 ```bash
