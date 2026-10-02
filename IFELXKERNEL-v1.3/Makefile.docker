@@ -1,0 +1,58 @@
+.PHONY: docker-build docker-run docker-interactive docker-clean docker-rebuild docker-qemu help
+
+DOCKER_IMAGE := ifelxos-kernel:latest
+DOCKER_CONTAINER := ifelxos-builder
+PROJECT_DIR := $(shell pwd)
+
+help:
+	@echo "Docker Build Targets:"
+	@echo "  make docker-build       - بناء صورة Docker"
+	@echo "  make docker-run         - تشغيل البناء في Container"
+	@echo "  make docker-interactive - فتح Container تفاعلي"
+	@echo "  make docker-qemu        - تشغيل في QEMU"
+	@echo "  make docker-clean       - حذف صورة Docker"
+	@echo "  make docker-rebuild     - إعادة البناء من الصفر"
+	@echo ""
+
+docker-build:
+	@echo "جاري بناء صورة Docker..."
+	docker build -t $(DOCKER_IMAGE) -f Dockerfile $(PROJECT_DIR)
+	@echo "✓ تم بناء الصورة بنجاح!"
+
+docker-run: docker-build
+	@echo "جاري بناء الـ Kernel في Container..."
+	docker run --rm \
+		-v $(PROJECT_DIR):/kernel \
+		$(DOCKER_IMAGE) \
+		bash -c "cd /kernel && make clean && make all && make iso"
+	@echo "✓ اكتمل البناء!"
+
+docker-interactive: docker-build
+	@echo "فتح Container تفاعلي..."
+	docker run -it --rm \
+		--name $(DOCKER_CONTAINER) \
+		-v $(PROJECT_DIR):/kernel \
+		$(DOCKER_IMAGE) \
+		/bin/bash
+
+docker-qemu: docker-build
+	@echo "تشغيل ISO في QEMU..."
+	docker run -it --rm \
+		-v $(PROJECT_DIR):/kernel \
+		$(DOCKER_IMAGE) \
+		bash -c "cd /kernel && qemu-system-x86_64 -cdrom IFelxOS.iso -m 256M -boot d -nographic"
+
+docker-clean:
+	@echo "حذف صورة Docker..."
+	docker rmi $(DOCKER_IMAGE) 2>/dev/null || true
+	@echo "✓ تم التنظيف!"
+
+docker-rebuild: docker-clean docker-build docker-run
+	@echo "✓ إعادة البناء اكتملت!"
+
+docker-shell:
+	@echo "فتح Shell في Container..."
+	docker run -it --rm \
+		-v $(PROJECT_DIR):/kernel \
+		$(DOCKER_IMAGE) \
+		bash -c "cd /kernel && bash"
